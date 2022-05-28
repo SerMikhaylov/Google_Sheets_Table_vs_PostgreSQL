@@ -2,11 +2,11 @@
 from google_table_read import data_google_table
 import psycopg2
 from config import host, user, password, db_name
-import pandas as pd
 
 # адаптируем формат np.int64 в классический тип данных для распознавания модулем psycopg2
 import numpy as np
 from psycopg2.extensions import register_adapter, AsIs
+
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 
 # разбиваем dataframe на столбцы
@@ -31,34 +31,24 @@ try:
     )
     connection.autocommit = True
 
-    # with connection.cursor() as cursor:
-    #     cursor.execute(
-    #         "SELECT version();"
-    #     )
-    #
-    #     print(f"Server version: {cursor.fetchone()}")
-
     # создаем новую таблицу в базе данных для вставки в нее информации из google-таблицы
-    # with connection.cursor() as cursor:
-    #     cursor.execute(
-    #         """CREATE TABLE orders(
-    #             Num_ SERIAL PRIMARY KEY NOT NULL,
-    #             Заказ TEXT,
-    #             Стоимость_$ TEXT,
-    #             Срок_поставки TEXT
-    #             );"""
-    #     )
-    #     print("[INFO] Table created successfully")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """CREATE TABLE orders(
+                Num_ SERIAL PRIMARY KEY NOT NULL,
+                Заказ INT,
+                Стоимость_$ INT,
+                Срок_поставки varchar (30)
+                );"""
+        )
+        print("[INFO] Table created successfully")
 
     # вносим в таблицу БД PostgreSQL данные из google-таблицы
-    # with connection.cursor() as cursor:
-    #     data = values
-    #     query = """INSERT INTO orders (num_, Заказ, Стоимость_$, Срок_поставки) VALUES (%s,%s,%s,%s)"""
-    #     cursor.executemany(query, data)
-    #     print("[INFO] Data was successfully inserted")
-
-    # добавим в таблицу БД дополнительную колонку «стоимость в руб.»
-    
+    with connection.cursor() as cursor:
+        data = values
+        query = """INSERT INTO orders (num_, Заказ, Стоимость_$, Срок_поставки) VALUES (%s,%s,%s,%s)"""
+        cursor.executemany(query, data)
+        print("[INFO] Data was successfully inserted")
 
     # удаление таблицы из базы данных (БД)
     # with connection.cursor() as cursor:

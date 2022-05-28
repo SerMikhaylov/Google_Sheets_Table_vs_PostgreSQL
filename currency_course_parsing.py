@@ -44,7 +44,7 @@ def get_currencies_dictionary(xml_content):
     df = pd.DataFrame({'currency': currency, 'course_currency': course_currency, 'date': date})
     return df
 
-if __name__ == '__main__':
-    url = 'http://www.cbr.ru/scripts/XML_daily.asp'
-    currency_df = get_currencies_dictionary(get_data(url))
-    # print(currency_df)
+# if __name__ == '__main__':
+#     url = 'http://www.cbr.ru/scripts/XML_daily.asp'
+#     currency_df = get_currencies_dictionary(get_data(url))
+#     print('[INFO] The parsing operation was successful')
