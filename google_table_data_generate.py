@@ -1,64 +1,49 @@
 # импортируем библиотеки
-from google_table_create import spreadsheetId, service
 import random
 import time
 
-# Заполнение ячеек таблицы данными
-values_data = []
-header_table = ['№', 'Заказ №', 'Стоимость, $', 'Срок поставки']
-number = []
-zakaz = []
-price = []
-delivery_time = []
+# функция для генерирования данных, которыми можно заполнить ячейки google-таблицы
+def data_generate_for_table(start_date, end_date):
+    values_data = []
+    header_table = ['№', 'Заказ №', 'Стоимость, $', 'Срок поставки']
+    number = []
+    zakaz = []
+    price = []
+    delivery_time = []
 
-# генерируем числа для заполнения первого столбца таблицы "№"
-for i in range(10):
-    number.append(i + 1)
+    # генерируем числа для заполнения первого столбца таблицы "№"
+    for i in range(10):
+        number.append(i + 1)
 
-# генерируем случайные числа для столбца "Заказ №"
-zakaz = [random.randint(1000000, 2000000) for i in range(len(number))]
+    # генерируем случайные числа для столбца "Заказ №"
+    zakaz = [random.randint(1000000, 2000000) for i in range(len(number))]
 
-# генерируем случайные числа для столбца "Стоимость $"
-price = [random.randint(100, 2000) for i in range(len(number))]
+    # генерируем случайные числа для столбца "Стоимость $"
+    price = [random.randint(100, 2000) for i in range(len(number))]
 
+    # генерируем случайные даты поставок для столбца "Срок поставки"
+    def strTimeProp(start, end, format, prop):
+        """start и end должны быть строками, указывающими время в заданном формате (стиль strftime),
+        определяющими интервал [start, end].
+        prop - коэффициент, необходимый для генерации случайной даты.
+        Возвращаемое время будет в указанном формате.
+        """
+        stime = time.mktime(time.strptime(start, format))
+        etime = time.mktime(time.strptime(end, format))
 
-# генерируем случайные даты поставок для столбца "Срок поставки"
-def strTimeProp(start, end, format, prop):
-    """start и end должны быть строками, указывающими время в заданном формате (стиль strftime),
-    определяющими интервал [start, end].
-    prop - коэффициент, необходимый для генерации случайной даты.
-    Возвращаемое время будет в указанном формате.
-    """
+        ptime = stime + prop * (etime - stime)
 
-    stime = time.mktime(time.strptime(start, format))
-    etime = time.mktime(time.strptime(end, format))
+        return time.strftime(format, time.localtime(ptime))
 
-    ptime = stime + prop * (etime - stime)
+    def randomDate(start, end, prop):
+        return strTimeProp(start, end, '%d.%m.%Y', prop)
 
-    return time.strftime(format, time.localtime(ptime))
+    delivery_time = [randomDate(start_date, end_date, (random.randint(1, 100) / 100)) for i in range(len(number))]
 
+    # группируем данные по строкам
+    values_data.append(header_table)
+    for elem in range(len(number)):
+        row_values = [number[elem], zakaz[elem], price[elem], delivery_time[elem]]
+        values_data.append(row_values)
 
-def randomDate(start, end, prop):
-    return strTimeProp(start, end, '%d.%m.%Y', prop)
-
-
-start_date = '1.5.2022'
-end_date = '31.5.2022'
-delivery_time = [randomDate(start_date, end_date, (random.randint(1, 100) / 100)) for i in range(len(number))]
-
-# группируем данные по строкам
-values_data.append(header_table)
-for elem in range(len(number)):
-    row_values = [number[elem], zakaz[elem], price[elem], delivery_time[elem]]
-    values_data.append(row_values)
-
-# заполняем таблицу данными
-results = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheetId, body={
-    "valueInputOption": "USER_ENTERED",  # Данные воспринимаются, как вводимые пользователем (считается значение формул)
-    "data": [
-        {"range": "Стоимость_заказов!A1:D11",
-         "majorDimension": "ROWS",  # Сначала заполнять строки, затем столбцы
-         "values": values_data}
-    ]
-}).execute()
-print('[INFO] Data for google table generated sucsessful')
+    return values_data
